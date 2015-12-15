@@ -1,10 +1,10 @@
 %
-%	Gomoku 
-%	Continued: September 2015
+%	Gomoku-2 
+%	Continued: December 2015
 %	
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
--module(gyrus).
+-module(gomoku).
 -export([gyrus/2]).
 
 

@@ -5,4 +5,4 @@
               {applications,[kernel,stdlib]},
               {mod,{gomoku_app,[]}},
               {env,[]},
-              {modules,[]}]}.
+              {modules,[gomoku,gomoku_app,gyrus_sup]}]}.

@@ -1,4 +1,4 @@
--module(gyrus_app).
+-module(gomoku_app).
 
 -behaviour(application).
 
@@ -16,7 +16,7 @@ start() ->
   ok = application:start(cowlib),
   ok = application:start(cowboy),
   ok = application:start(sync),
-  ok = application:start(gyrus).
+  ok = application:start(gomoku).
 
 start(_StartType, _StartArgs) ->
     Dispatch = cowboy_router:compile([
