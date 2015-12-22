@@ -22,14 +22,15 @@ change_state({Turn,_,Board},{I,J}) ->
 	Color = color(Turn),
 	e = element(I,element(J,Board)),
 
-	io:format("~nNew ~p move:(~p,~p)~n",[Turn,I,J]),
+	io:format("~nmove ~p: {~p,~p}~n",[Turn,I,J]),
 	Row1 = erlang:delete_element(I,element(J,Board)),
 	Board1 = erlang:delete_element(J,Board),
 	case Color of
 		whites -> Row2 = erlang:insert_element(I,Row1,w);
 		blacks -> Row2 = erlang:insert_element(I,Row1,b)
 	end,
-	Next_state = {Turn+1,{I,J},erlang:insert_element(J,Board1,Row2)},
+	Next_state = {Turn+1,{I,J},Board2=erlang:insert_element(J,Board1,Row2)},
+	print_board(Board2),
 
 	case lines:check_five(Next_state) of
 		false when Turn =:= 59 -> draw;
@@ -51,24 +52,29 @@ print_state({Turn,Board}) -> io:format("Turn:~p~n",[Turn]), print_board(Board).
 print_board(Board) ->
 	Rows = lists:reverse(tuple_to_list(Board)),
 	print_rows(15,Rows),
-	io:format("  a b c d f g h i j k l m n o p~n~n").
+	io:format("   a b c d f g h i j k l m n o p~n~n").
 
 print_rows(N,[Row|Rows]) ->
-	print_stones(" " ++ integer_to_list(N rem 10), tuple_to_list(Row)),
+	print_stones(pad3(integer_to_list(N)++" "), lists:reverse(tuple_to_list(Row)),""),
 	print_rows(N-1,Rows);
 print_rows(_,[]) -> ok.
 	%io:format("~n").
 
 
-print_stones(Acc,[Stone|Stones]) ->
+print_stones(Head,[Stone|Stones],Acc) ->
 	case Stone of
-		e -> print_stones("|-"++Acc,Stones);
-		b -> print_stones("X-"++Acc,Stones);
-		w -> print_stones("O-"++Acc,Stones)
+		e -> print_stones(Head,Stones,[$-,$| |Acc]);
+		b -> print_stones(Head,Stones,[$-,$X |Acc]);
+		w -> print_stones(Head,Stones,[$-,$O |Acc])
 	end;
-print_stones(Acc,[]) ->
-	[E1,E2,_|Tile] = lists:reverse(Acc),
-	io:format("~s~n",[[E1,E2|Tile]]).
+print_stones(Head,[],Acc) ->
+	[$-|Tile] = Acc,
+	io:format("~s~n",[Head++Tile]).
+
+
+pad3(Str) when length(Str) =:= 2 -> [" "|Str];
+pad3(Str) when length(Str) =:= 3 -> Str;
+pad3(_) -> error('wrong length of the string').
 
 
 init_state() ->
