@@ -7,7 +7,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -module(game).
--export([
+-export([run/2
 		]).
 
 
@@ -15,8 +15,24 @@
 % returns blacks_won, whites_won, or draw
 run(Blacks,Whites) ->
 	State = state:init_state(),
-	B_state = Blacks:init_state(blacks,State),
-	W_state = Whites:init_state(whites,State),
-	run(State,Blacks,B_state,Whites,W_state).
+	B_eval = Blacks:init_evaluation(blacks,State),
+	W_eval = Whites:init_evaluation(whites,State),
+	run(State,Blacks,B_eval,Whites,W_eval).
 
-run({Turn,LastMove,Board},Blacks,B_state,Whites,W_state) ->
+run({Turn,_,_}=State,Blacks,B_eval,Whites,W_eval) when Turn rem 2 =:= 0 ->
+	Move = Whites:get_move(State,W_eval),
+	W_eval1 = Whites:change_evaluation(W_eval,Move),
+	case state:change_state(State,Move) of
+		{whites_won,Fiver} -> whites_won;
+		draw -> draw;
+		NextState -> run(NextState,Blacks,B_eval,Whites,W_eval1)
+	end;
+run(State,Blacks,B_eval,Whites,W_eval) ->
+	Move = Blacks:get_move(State,B_eval),
+	B_eval1 = Blacks:change_evaluation(B_eval,Move),
+	case state:change_state(State,Move) of
+		{blacks_won,Fiver} -> blacks_won;
+		draw -> draw;
+		NextState -> run(NextState,Blacks,B_eval1,Whites,W_eval)
+	end.
+
