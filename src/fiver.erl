@@ -55,4 +55,5 @@ count(V,H,D1,D2) ->
 			end,Dict1,tuple_to_list(Tup1))
 		end,Dict,tuple_to_list(Tup))
 	end,Cnts0,[V,H,D1,D2]).
+
 	

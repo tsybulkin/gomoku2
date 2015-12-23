@@ -19,7 +19,7 @@ init_evaluation(_Color,_State) -> nothing.
 
 get_move({Turn,_,Board},_Evaluation) -> 
 	Size = min(8,round(math:sqrt(Turn))),
-	get_rand_move(Size,Size*Size,Board).
+	{get_rand_move(Size,Size*Size,Board),no_change}.
 
 get_rand_move(7,0,Board) -> get_rand_move(7,49,Board);
 get_rand_move(Size,0,Board) -> get_rand_move(Size+1,(Size+1)*(Size+1),Board);

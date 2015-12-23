@@ -45,12 +45,17 @@ init_evaluation(Color,{Turn,_,Board}) ->
 		[list_to_tuple([ fiver:state(lists:sublist(L,J,5)) || J <- lists:seq(1,length(L)-4)]) | Acc]
 	end,[],Ld2)),
 
-	Cnts = fiver:count(V,H,D1,D2),
-	{V,H,D1,D2,dict:to_list(Cnts)}.
+	{V,H,D1,D2,fiver:count(V,H,D1,D2)}.
 
 
-get_move({1,_,_Board},_Evaluation) -> {8,8};
-get_move({Turn,LastMove,Board},Evaluation) -> 
+
+get_move({1,_,Board}=State,_Evaluation) -> 
+	FirstMove = {8,8},
+	State1 = state:change_state(State,FirstMove),
+	{ FirstMove,init_evaluation(blacks,State1)};
+get_move({Turn,LastMove,Board},LastEval) ->
+	PrevEval = change_evaluation(LastEval, LastMove),
+	CandidateMoves = moves:get_candidate_moves(Turn,Board),
 	{9,9}.
 
 
@@ -58,7 +63,7 @@ get_move({Turn,LastMove,Board},Evaluation) ->
 
 % internal representation of the state. It may contain 
 % different parameters reflecting evaluation of the current state
-% random agent does not use any such information
+% random agent uses no such information
 change_evaluation(_PrevEval, _Move) -> no_change.
 
 

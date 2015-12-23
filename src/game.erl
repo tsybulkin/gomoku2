@@ -25,16 +25,14 @@ run(Blacks,Whites) ->
 	run(State,Blacks,B_eval,Whites,W_eval).
 
 run({Turn,_,_}=State,Blacks,B_eval,Whites,W_eval) when Turn rem 2 =:= 0 ->
-	Move = Whites:get_move(State,W_eval),
-	W_eval1 = Whites:change_evaluation(W_eval,Move),
+	{Move,W_eval1} = Whites:get_move(State,W_eval),
 	case state:change_state(State,Move) of
 		{whites_won,_Fiver} -> whites_won;
 		draw -> draw;
 		NextState -> run(NextState,Blacks,B_eval,Whites,W_eval1)
 	end;
 run(State,Blacks,B_eval,Whites,W_eval) ->
-	Move = Blacks:get_move(State,B_eval),
-	B_eval1 = Blacks:change_evaluation(B_eval,Move),
+	{Move,B_eval1} = Blacks:get_move(State,B_eval),
 	case state:change_state(State,Move) of
 		{blacks_won,_Fiver} -> blacks_won;
 		draw -> draw;
