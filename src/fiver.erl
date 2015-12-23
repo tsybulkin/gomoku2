@@ -9,7 +9,8 @@
 
 
 -module(fiver).
--export([state/1
+-export([state/1,
+		count/4
 		]).
 
 
@@ -41,3 +42,17 @@ state(w_quartet,[w|Fiver]) -> state(w_quintet,Fiver);
 
 state(State,[]) -> State.
 
+
+
+count(V,H,D1,D2) ->
+	Cnts0 = dict:from_list([{free,0},{mixed,0},{b_siglet,0},{w_singlet,0},
+		{b_duplet,0},{w_duplet,0},{b_triplet,0},{w_triplet,0},{b_quartet,0},
+		{w_quartet,0},{b_quintet,0},{w_quintet,0}]),
+
+	lists:foldl(fun(Tup,Dict)-> 
+		lists:foldl(fun(Tup1,Dict1)->
+			lists:foldl(fun(Key,Dict2)-> dict:update_counter(Key,1,Dict2) 
+			end,Dict1,tuple_to_list(Tup1))
+		end,Dict,tuple_to_list(Tup))
+	end,Cnts0,[V,H,D1,D2]).
+	
