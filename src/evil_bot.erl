@@ -49,13 +49,13 @@ init_evaluation(Color,{Turn,_,Board}) ->
 
 
 
-get_move({1,_,Board}=State,_Evaluation) -> 
+get_move({1,_,_}=State,_Evaluation) -> 
 	FirstMove = {8,8},
 	State1 = state:change_state(State,FirstMove),
 	{ FirstMove,init_evaluation(blacks,State1)};
-get_move({Turn,LastMove,Board},LastEval) ->
+get_move({_,LastMove,_}=State,LastEval) ->
 	PrevEval = change_evaluation(LastEval, LastMove),
-	CandidateMoves = moves:get_candidate_moves(Turn,Board),
+	CandidateMoves = moves:get_candidate_moves(State),
 	{9,9}.
 
 
