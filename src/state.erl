@@ -6,7 +6,7 @@
 
 -module(state).
 
--export([init_state/0,
+-export([init_state/0, init_state/1,
 		change_state/2,
 		print_state/1,
 		print_board/1,
@@ -96,6 +96,11 @@ init_state() ->
 	 {e,e,e,e,e,e,e,e,e,e,e,e,e,e,e}}
 	 }.
 
+
+init_state(Moves) -> init_state(init_state(),Moves).
+
+init_state(State,[Move|Moves]) -> init_state(state:change_state(State,Move),Moves);
+init_state(State,[]) -> State.
 
 
 color(Turn) when Turn rem 2 =:= 0 -> whites;

@@ -20,9 +20,7 @@
 % returns blacks_won, whites_won, or draw
 run(Blacks,Whites) ->
 	State = state:init_state(),
-	B_eval = Blacks:init_evaluation(blacks,State),
-	W_eval = Whites:init_evaluation(whites,State),
-	run(State,Blacks,B_eval,Whites,W_eval).
+	run(State,Blacks,no_evaluation,Whites,no_evaluation).
 
 run({Turn,_,_}=State,Blacks,B_eval,Whites,W_eval) when Turn rem 2 =:= 0 ->
 	{Move,W_eval1} = Whites:get_move(State,W_eval),
