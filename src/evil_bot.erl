@@ -54,10 +54,14 @@ get_move({1,_,_}=State,no_evaluation) ->
 	{ FirstMove,init_evaluation(Board)};
 get_move({Turn,LastMove,_}=State,LastEval) ->
 	OppColor = state:color(Turn-1),
-	PrevEval = change_evaluation(LastEval,LastMove,OppColor),
+	MyColor = state:color(Turn),
+	W = w(MyColor),
+	CurrEval = change_evaluation(LastEval,LastMove,OppColor),
 	CandidateMoves = moves:get_candidate_moves(State),
-	{9,9}.
-
+	RatedMoves = [ {Move,estimate_move(Move,CurrEval,MyColor,W)} || Move <- CandidateMoves],
+	[{M,_}|_]=SortedMoves=lists:sort(fun({_,R1},{_,R2})-> R1>R2 end, RatedMoves),
+	io:format("Candidate moves: ~p~n",[SortedMoves]),
+	{M,change_evaluation(CurrEval,M,MyColor)}.
 
 
 
@@ -69,16 +73,79 @@ change_evaluation(no_evaluation, {8,8}, blacks) ->
 
 change_evaluation({Vert,Hor,D1,D2,Cnts}, {I,J}, OppColor) -> 
 	Column = element(I,Vert),
+	{Cnts1,Column1} = lists:foldl(fun(N,{Dict,Col})->
+		S = element(N,Col),
+		S1 = fiver:change_state(S,OppColor),
+		Col1 = erlang:delete_element(N,Col),
+		Col2 = erlang:insert_element(N,Col1,S1),
+		{dict:update_counter(S1,1,dict:update_counter(S,-1,Dict)),Col2}
+	end,{Cnts,Column},lists:seq(max(J-4,1),min(J,11))),
+	Vert1 = erlang:delete_element(I,Vert),
+	Vert2 = erlang:insert_element(I,Vert1,Column1),
+
+	Row = element(J,Hor),
+	{Cnts2,Row1} = lists:foldl(fun(N,{Dict,R})->
+		S = element(N,R),
+		S1 = fiver:change_state(S,OppColor),
+		R1 = erlang:delete_element(N,R),
+		R2 = erlang:insert_element(N,R1,S1),
+		{dict:update_counter(S1,1,dict:update_counter(S,-1,Dict)),R2}
+	end,{Cnts1,Row},lists:seq(max(I-4,1),min(I,11) )),
+	Hor1 = erlang:delete_element(J,Hor),
+	Hor2 = erlang:insert_element(I,Hor1,Row1),
+
+	D1_index = J-I+11,
+	if 
+		D1_index<1 orelse D1_index>21 -> 
+			Cnts3=Cnts2, D12=D1;
+		true -> 
+			Diag1=element(D1_index,D1), Size1=size(Diag1),
+			if I < J -> Ind1=I; true -> Ind1=J end,
+			{Cnts3,Diag11} = lists:foldl(fun(N,{Dict,Dia})->
+				S = element(N,Dia),
+				S1 = fiver:change_state(S,OppColor),
+				Dia1 = erlang:delete_element(N,Dia),
+				Dia2 = erlang:insert_element(N,Dia1,S1),
+				{dict:update_counter(S1,1,dict:update_counter(S,-1,Dict)),Dia2}
+			end,{Cnts2,Diag1},lists:seq(max(Ind1-4,1),min(Ind1,Size1) )),
+			D11 = erlang:delete_element(D1_index,D1),
+			D12 = erlang:insert_element(D1_index,D11,Diag11)
+	end,
+
+	D2_index = J+I-5,
+	if 
+		D2_index<1 orelse D2_index>21 -> 
+			Cnts4=Cnts3, D22=D2;
+		true -> 
+			Diag2=element(D2_index,D2), Size2=size(Diag2),
+			if I+J < 15 -> Ind2=I; true -> Ind2=16-J end,
+			{Cnts4,Diag12} = lists:foldl(fun(N,{Dict,Dia})->
+				S = element(N,Dia),
+				S1 = fiver:change_state(S,OppColor),
+				Dia1 = erlang:delete_element(N,Dia),
+				Dia2 = erlang:insert_element(N,Dia1,S1),
+				{dict:update_counter(S1,1,dict:update_counter(S,-1,Dict)),Dia2}
+			end,{Cnts3,Diag2},lists:seq(max(Ind2-4,1),min(Ind2,Size2) )),
+			D21 = erlang:delete_element(D2_index,D2),
+			D22 = erlang:insert_element(D2_index,D21,Diag12)
+	end,
+	{Vert2,Hor2,D12,D22,Cnts4}.
+
+
+
+estimate_move({I,J},{Vert,Hor,D1,D2,_},MyColor,W) ->
+	Cnts = fiver:init_counters(),
+	Column = element(I,Vert),
 	Cnts1 = lists:foldl(fun(N,Acc)->
 		S = element(N,Column),
-		S1 = fiver:change_state(S,OppColor),
+		S1 = fiver:change_state(S,MyColor),
 		dict:update_counter(S1,1,dict:update_counter(S,-1,Acc))
 	end,Cnts,lists:seq(max(J-4,1),min(J,11))),
 
 	Row = element(J,Hor),
 	Cnts2 = lists:foldl(fun(N,Acc)->
 		S = element(N,Row),
-		S1 = fiver:change_state(S,OppColor),
+		S1 = fiver:change_state(S,MyColor),
 		dict:update_counter(S1,1,dict:update_counter(S,-1,Acc))
 	end,Cnts1,lists:seq(max(I-4,1),min(I,11) )),
 
@@ -90,7 +157,7 @@ change_evaluation({Vert,Hor,D1,D2,Cnts}, {I,J}, OppColor) ->
 			if I < J -> Ind1=I; true -> Ind1=J end,
 			Cnts3 = lists:foldl(fun(N,Acc)->
 				S = element(N,Diag1),
-				S1 = fiver:change_state(S,OppColor),
+				S1 = fiver:change_state(S,MyColor),
 				dict:update_counter(S1,1,dict:update_counter(S,-1,Acc))
 			end,Cnts2,lists:seq(max(Ind1-4,1),min(Ind1,Size1) ))
 	end,
@@ -103,11 +170,21 @@ change_evaluation({Vert,Hor,D1,D2,Cnts}, {I,J}, OppColor) ->
 			if I+J < 15 -> Ind2=I; true -> Ind2=16-J end,
 			Cnts4 = lists:foldl(fun(N,Acc)->
 				S = element(N,Diag2),
-				S1 = fiver:change_state(S,OppColor),
+				S1 = fiver:change_state(S,MyColor),
 				dict:update_counter(S1,1,dict:update_counter(S,-1,Acc))
 			end,Cnts3,lists:seq(max(Ind2-4,1),min(Ind2,Size2) ))
 	end,
-	Cnts4.
+	lists:foldl(fun(Key,Acc)->
+		Acc + dict:fetch(Key,Cnts4)*dict:fetch(Key,W)
+	end,0,dict:fetch_keys(Cnts4)).
+
+
+w(blacks) -> dict:from_list([{free,0},{mixed,0},{b_singlet,1},{w_singlet,2},
+	{b_duplet,3},{w_duplet,6},{b_triplet,9},{w_triplet,18},
+	{b_quartet,27},{w_quartet,54},{b_quintet,80},{w_quintet,0}]);
+w(whites) -> dict:from_list([{free,0},{mixed,0},{b_singlet,2},{w_singlet,1},
+	{b_duplet,6},{w_duplet,3},{b_triplet,18},{w_triplet,9},
+	{b_quartet,54},{w_quartet,27},{b_quintet,0},{w_quintet,80}]).
 
 
 

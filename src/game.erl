@@ -27,13 +27,17 @@ run({Turn,_,_}=State,Blacks,B_eval,Whites,W_eval) when Turn rem 2 =:= 0 ->
 	case state:change_state(State,Move) of
 		{whites_won,_Fiver} -> whites_won;
 		draw -> draw;
-		NextState -> run(NextState,Blacks,B_eval,Whites,W_eval1)
+		NextState -> 
+			io:format("Whites' move: ~p~n",[Move]),
+			run(NextState,Blacks,B_eval,Whites,W_eval1)
 	end;
 run(State,Blacks,B_eval,Whites,W_eval) ->
 	{Move,B_eval1} = Blacks:get_move(State,B_eval),
 	case state:change_state(State,Move) of
 		{blacks_won,_Fiver} -> blacks_won;
 		draw -> draw;
-		NextState -> run(NextState,Blacks,B_eval1,Whites,W_eval)
+		NextState -> 
+			io:format("Blacks' move: ~p~n",[Move]),
+			run(NextState,Blacks,B_eval1,Whites,W_eval)
 	end.
 

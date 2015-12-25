@@ -22,6 +22,7 @@ state(State,[e|Fiver]) -> state(State,Fiver);
 state(free,[b|Fiver]) -> state(b_singlet,Fiver);
 state(free,[w|Fiver]) -> state(w_singlet,Fiver);
 
+state(mixed,_) -> mixed;
 state(b_singlet,[w|_]) -> mixed;
 state(w_singlet,[b|_]) -> mixed;
 state(b_singlet,[b|Fiver]) -> state(b_duplet,Fiver);
@@ -47,7 +48,7 @@ state(State,[]) -> State.
 
 
 change_state(S,blacks) -> state(S,[b]);
-change_state(S,whithes)-> state(S,[w]).
+change_state(S,whites)-> state(S,[w]).
 
 
 
@@ -62,7 +63,7 @@ count(V,H,D1,D2) ->
 	end,Cnts0,[V,H,D1,D2]).
 
 
-init_counters()	-> dict:from_list([{free,0},{mixed,0},{b_siglet,0},{w_singlet,0},
-		{b_duplet,0},{w_duplet,0},{b_triplet,0},{w_triplet,0},
-		{b_quartet,0},{w_quartet,0},{b_quintet,0},{w_quintet,0}]).
+init_counters()	-> dict:from_list([{free,0},{mixed,0},{b_singlet,0},{w_singlet,0},
+	{b_duplet,0},{w_duplet,0},{b_triplet,0},{w_triplet,0},
+	{b_quartet,0},{w_quartet,0},{b_quintet,0},{w_quintet,0}]).
 

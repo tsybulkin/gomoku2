@@ -22,7 +22,7 @@ change_state({Turn,_,Board},{I,J}) ->
 	Color = color(Turn),
 	e = element(I,element(J,Board)),
 
-	io:format("~nmove ~p: {~p,~p}~n",[Turn,I,J]),
+	%io:format("~nmove ~p: {~p,~p}~n",[Turn,I,J]),
 	Row1 = erlang:delete_element(I,element(J,Board)),
 	Board1 = erlang:delete_element(J,Board),
 	case Color of
