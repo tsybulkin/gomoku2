@@ -72,6 +72,7 @@ change_evaluation(no_evaluation, {8,8}, blacks) ->
 	init_evaluation(Board);
 
 change_evaluation({Vert,Hor,D1,D2,Cnts}, {I,J}, OppColor) -> 
+	io:format("before move:~p~n",[dict:to_list(Cnts)]),
 	Column = element(I,Vert),
 	{Cnts1,Column1} = lists:foldl(fun(N,{Dict,Col})->
 		S = element(N,Col),
@@ -82,6 +83,7 @@ change_evaluation({Vert,Hor,D1,D2,Cnts}, {I,J}, OppColor) ->
 	end,{Cnts,Column},lists:seq(max(J-4,1),min(J,11))),
 	Vert1 = erlang:delete_element(I,Vert),
 	Vert2 = erlang:insert_element(I,Vert1,Column1),
+	io:format("after vert:~p~n",[dict:to_list(Cnts1)]),
 
 	Row = element(J,Hor),
 	{Cnts2,Row1} = lists:foldl(fun(N,{Dict,R})->
@@ -92,7 +94,8 @@ change_evaluation({Vert,Hor,D1,D2,Cnts}, {I,J}, OppColor) ->
 		{dict:update_counter(S1,1,dict:update_counter(S,-1,Dict)),R2}
 	end,{Cnts1,Row},lists:seq(max(I-4,1),min(I,11) )),
 	Hor1 = erlang:delete_element(J,Hor),
-	Hor2 = erlang:insert_element(I,Hor1,Row1),
+	Hor2 = erlang:insert_element(J,Hor1,Row1),
+	io:format("after hor:~p~n",[dict:to_list(Cnts2)]),
 
 	D1_index = J-I+11,
 	if 
@@ -111,6 +114,7 @@ change_evaluation({Vert,Hor,D1,D2,Cnts}, {I,J}, OppColor) ->
 			D11 = erlang:delete_element(D1_index,D1),
 			D12 = erlang:insert_element(D1_index,D11,Diag11)
 	end,
+	io:format("after diag1:~p~n",[dict:to_list(Cnts3)]),
 
 	D2_index = J+I-5,
 	if 
@@ -129,6 +133,7 @@ change_evaluation({Vert,Hor,D1,D2,Cnts}, {I,J}, OppColor) ->
 			D21 = erlang:delete_element(D2_index,D2),
 			D22 = erlang:insert_element(D2_index,D21,Diag12)
 	end,
+	io:format("~p~n",[dict:to_list(Cnts4)]),
 	{Vert2,Hor2,D12,D22,Cnts4}.
 
 
@@ -179,12 +184,12 @@ estimate_move({I,J},{Vert,Hor,D1,D2,_},MyColor,W) ->
 	end,0,dict:fetch_keys(Cnts4)).
 
 
-w(blacks) -> dict:from_list([{free,0},{mixed,0},{b_singlet,1},{w_singlet,2},
-	{b_duplet,3},{w_duplet,6},{b_triplet,9},{w_triplet,18},
-	{b_quartet,27},{w_quartet,54},{b_quintet,80},{w_quintet,0}]);
-w(whites) -> dict:from_list([{free,0},{mixed,0},{b_singlet,2},{w_singlet,1},
-	{b_duplet,6},{w_duplet,3},{b_triplet,18},{w_triplet,9},
-	{b_quartet,54},{w_quartet,27},{b_quintet,0},{w_quintet,80}]).
+w(blacks) -> dict:from_list([{free,0},{mixed,0},{b_singlet,0},{w_singlet,-1},
+	{b_duplet,1.5},{w_duplet,-3},{b_triplet,9},{w_triplet,-20},
+	{b_quartet,40},{w_quartet,-80},{b_quintet,100},{w_quintet,0}]);
+w(whites) -> dict:from_list([{free,0},{mixed,0},{b_singlet,-1},{w_singlet,0},
+	{b_duplet,-2},{w_duplet,1},{b_triplet,-20},{w_triplet,10},
+	{b_quartet,-80},{w_quartet,45},{b_quintet,0},{w_quintet,100}]).
 
 
 

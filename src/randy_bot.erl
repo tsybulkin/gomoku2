@@ -13,7 +13,7 @@
 		]).
 
 
-init_evaluation(_Color,_State) -> nothing.
+init_evaluation(_Color,_State) -> no_evaluation.
 
 
 
