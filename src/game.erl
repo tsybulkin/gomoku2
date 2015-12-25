@@ -28,7 +28,7 @@ run({Turn,_,_}=State,Blacks,B_eval,Whites,W_eval) when Turn rem 2 =:= 0 ->
 		{whites_won,_Fiver} -> whites_won;
 		draw -> draw;
 		NextState -> 
-			io:format("(~p) Whites' move: ~p~n",[Turn,Move]),
+			io:format("(~p) Whites' move: ~p~n",[Turn,convert(Move)]),
 			run(NextState,Blacks,B_eval,Whites,W_eval1)
 	end;
 run({Turn,_,_}=State,Blacks,B_eval,Whites,W_eval) ->
@@ -37,7 +37,10 @@ run({Turn,_,_}=State,Blacks,B_eval,Whites,W_eval) ->
 		{blacks_won,_Fiver} -> blacks_won;
 		draw -> draw;
 		NextState -> 
-			io:format("(~p) Blacks' move: ~p~n",[Turn,Move]),
+			io:format("(~p) Blacks' move: ~p~n",[Turn,convert(Move)]),
 			run(NextState,Blacks,B_eval1,Whites,W_eval)
 	end.
 
+
+
+convert({I,J}) -> [lists:nth(I,"abcdefghijklmnop")|integer_to_list(J)].

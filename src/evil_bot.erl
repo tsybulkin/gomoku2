@@ -186,10 +186,10 @@ estimate_move({I,J},{Vert,Hor,D1,D2,_},MyColor,W) ->
 
 w(blacks) -> dict:from_list([{free,0},{mixed,0},{b_singlet,0},{w_singlet,-1},
 	{b_duplet,1.5},{w_duplet,-3},{b_triplet,9},{w_triplet,-20},
-	{b_quartet,40},{w_quartet,-80},{b_quintet,100},{w_quintet,0}]);
+	{b_quartet,40},{w_quartet,-80},{b_quintet,200},{w_quintet,0}]);
 w(whites) -> dict:from_list([{free,0},{mixed,0},{b_singlet,-1},{w_singlet,0},
 	{b_duplet,-2},{w_duplet,1},{b_triplet,-20},{w_triplet,10},
-	{b_quartet,-80},{w_quartet,45},{b_quintet,0},{w_quintet,100}]).
+	{b_quartet,-80},{w_quartet,45},{b_quintet,0},{w_quintet,200}]).
 
 
 

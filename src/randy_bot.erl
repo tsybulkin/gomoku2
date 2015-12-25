@@ -7,13 +7,12 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -module(randy_bot).
--export([init_evaluation/2,
-		get_move/2,
-		change_evaluation/2
+-export([
+		get_move/2
 		]).
 
 
-init_evaluation(_Color,_State) -> no_evaluation.
+%init_evaluation(_Color,_State) -> no_evaluation.
 
 
 
@@ -36,7 +35,7 @@ get_rand_move(Size,N_attempts,Board) ->
 % internal representation of the state. It may contain 
 % different parameters reflecting evaluation of the current state
 % random agent does not use any such information
-change_evaluation(_PrevEval, _Move) -> no_change.
+%change_evaluation(_PrevEval, _Move) -> no_change.
 
 
 
