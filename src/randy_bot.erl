@@ -12,9 +12,6 @@
 		]).
 
 
-%init_evaluation(_Color,_State) -> no_evaluation.
-
-
 
 get_move({Turn,_,Board},_Evaluation) -> 
 	Size = min(8,round(math:sqrt(Turn))),
@@ -29,13 +26,6 @@ get_rand_move(Size,N_attempts,Board) ->
 		e -> {I,J};
 		_ -> get_rand_move(Size,N_attempts-1,Board)
 	end.
-
-
-
-% internal representation of the state. It may contain 
-% different parameters reflecting evaluation of the current state
-% random agent does not use any such information
-%change_evaluation(_PrevEval, _Move) -> no_change.
 
 
 

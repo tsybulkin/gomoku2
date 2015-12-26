@@ -14,7 +14,6 @@
 
 
 
-
 get_candidate_moves({Turn,_,Board}) ->
 	Size = 1+min(7,round(math:sqrt(Turn))),
 	%Color = own_color(Turn),
@@ -37,7 +36,4 @@ get_arround({X,Y},Size,Board) ->
 	end, [{X-Size+I,Y-Size+J} || I<-lists:seq(1,2*Size-1), J<-lists:seq(1,2*Size-1)]).
 
 
-
-%own_color(Turn) when Turn rem 2 =:= 0 -> w;
-%own_color(_) -> b.
 

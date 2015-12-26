@@ -10,6 +10,7 @@
 		change_state/2,
 		print_state/1,
 		print_board/1,
+		convert/1,
 		color/1
 		]).
 
@@ -42,6 +43,9 @@ change_state({Turn,_,Board},{I,J}) ->
 			end	
 	end.	
 
+
+
+convert({I,J}) -> [lists:nth(I,"abcdefghijklmno")|integer_to_list(J)].
 
 
 

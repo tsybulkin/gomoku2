@@ -9,7 +9,8 @@
 
 -module(evil_bot).
 -export([
-		get_move/2
+		get_move/2,
+		get_value/2
 		]).
 
 
@@ -61,7 +62,9 @@ get_move({Turn,LastMove,_}=State,LastEval) ->
 	RatedMoves = [ {Move,estimate_move(Move,CurrEval,MyColor,W)} || Move <- CandidateMoves],
 	[{M,_}|_]=SortedMoves=lists:sort(fun({_,R1},{_,R2})-> R1>R2 end, RatedMoves),
 	io:format("Candidate moves: ~p~n",[lists:sublist(SortedMoves,10)]),
-	{M,change_evaluation(CurrEval,M,MyColor)}.
+	{_,_,_,_,Aggregates} = NewEval = change_evaluation(CurrEval,M,MyColor),
+	io:format("State value: ~p~n",[get_value(Aggregates,W)]),
+	{M,NewEval}.
 
 
 
@@ -133,7 +136,7 @@ change_evaluation({Vert,Hor,D1,D2,Cnts}, {I,J}, OppColor) ->
 			D21 = erlang:delete_element(D2_index,D2),
 			D22 = erlang:insert_element(D2_index,D21,Diag12)
 	end,
-	io:format("~p~n",[dict:to_list(Cnts4)]),
+	%io:format("~p~n",[dict:to_list(Cnts4)]),
 	{Vert2,Hor2,D12,D22,Cnts4}.
 
 
@@ -179,19 +182,24 @@ estimate_move({I,J},{Vert,Hor,D1,D2,_},MyColor,W) ->
 				dict:update_counter(S1,1,dict:update_counter(S,-1,Acc))
 			end,Cnts3,lists:seq(max(Ind2-4,1),min(Ind2,Size2) ))
 	end,
+	get_value(Cnts4,W).
+
+
+get_value(Evaluation,W) ->
 	lists:foldl(fun(Key,Acc)->
-		Acc + dict:fetch(Key,Cnts4)*dict:fetch(Key,W)
-	end,0,dict:fetch_keys(Cnts4)).
+		Acc + dict:fetch(Key,Evaluation)*dict:fetch(Key,W)
+	end,0,dict:fetch_keys(Evaluation)).
+
 
 
 -define(MY_SINGL,0).
--define(OPP_SINGL,-1).
+-define(OPP_SINGL,-0.5).
 -define(MY_DUPL,2).
 -define(OPP_DUPL,-4).
--define(MY_TRIPL,8).
--define(OPP_TRIPL,-16).
--define(MY_QUART,32).
--define(OPP_QUART,-64).
+-define(MY_TRIPL,7).
+-define(OPP_TRIPL,-14).
+-define(MY_QUART,26).
+-define(OPP_QUART,-51).
 -define(MY_QUINT,100).
 -define(OPP_QUINT,-100).
 -define(FREE,0).
