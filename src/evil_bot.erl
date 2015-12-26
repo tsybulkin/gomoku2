@@ -9,9 +9,42 @@
 
 -module(evil_bot).
 -export([
+		init_evaluation/1,
+		change_evaluation/3,
+		estimate_move/3,
 		get_move/2,
-		get_value/2
+		get_value/3
 		]).
+
+
+-define(MY_SINGL,0).
+-define(OPP_SINGL,-0.5).
+-define(MY_DUPL,2).
+-define(OPP_DUPL,-4).
+-define(MY_TRIPL,7).
+-define(OPP_TRIPL,-14).
+-define(MY_QUART,26).
+-define(OPP_QUART,-51).
+-define(MY_QUINT,100).
+-define(OPP_QUINT,-100).
+-define(FREE,0).
+-define(MIXED,0).
+
+
+
+init_w() -> dict:from_list([{{free,blacks},?FREE},{{free,whites},?FREE},
+	{{mixed,blacks},?MIXED},{{mixed,whites},?MIXED},
+	{{b_singlet,blacks},?MY_SINGL},{{w_singlet,blacks},?OPP_SINGL},
+	{{b_duplet,blacks},?MY_DUPL},{{w_duplet,blacks},?OPP_DUPL},
+	{{b_triplet,blacks},?MY_TRIPL},{{w_triplet,blacks},?OPP_TRIPL},
+	{{b_quartet,blacks},?MY_QUART},{{w_quartet,blacks},?OPP_QUART},
+	{{b_quintet,blacks},?MY_QUINT},{{w_quintet,blacks},?OPP_QUINT},
+	{{b_singlet,whites},?OPP_SINGL},{{w_singlet,whites},?MY_SINGL},
+	{{b_duplet,whites},?OPP_DUPL},{{w_duplet,whites},?MY_DUPL},
+	{{b_triplet,whites},?OPP_TRIPL},{{w_triplet,whites},?MY_TRIPL},
+	{{b_quartet,whites},?OPP_QUART},{{w_quartet,whites},?MY_QUART},
+	{{b_quintet,whites},?OPP_QUINT},{{w_quintet,whites},?MY_QUINT}]).
+
 
 
 % Evaluation = {165Vert={15x11},165Hor={15x11},121D1={21x..},121D2={21x..}, Counters}
@@ -45,7 +78,7 @@ init_evaluation(Board) ->
 		[list_to_tuple([ fiver:state(lists:sublist(L,J,5)) || J <- lists:seq(1,length(L)-4)]) | Acc]
 	end,[],Ld2)),
 
-	{V,H,D1,D2,fiver:count(V,H,D1,D2)}.
+	{V,H,D1,D2,fiver:count(V,H,D1,D2),init_w()}.
 
 
 
@@ -56,14 +89,13 @@ get_move({1,_,_}=State,no_evaluation) ->
 get_move({Turn,LastMove,_}=State,LastEval) ->
 	OppColor = state:color(Turn-1),
 	MyColor = state:color(Turn),
-	W = w(MyColor),
-	CurrEval = change_evaluation(LastEval,LastMove,OppColor),
+	{_,_,_,_,_,W}=CurrEval = change_evaluation(LastEval,LastMove,OppColor),
 	CandidateMoves = moves:get_candidate_moves(State),
-	RatedMoves = [ {Move,estimate_move(Move,CurrEval,MyColor,W)} || Move <- CandidateMoves],
+	RatedMoves = [ {Move,estimate_move(Move,CurrEval,MyColor)} || Move <- CandidateMoves],
 	[{M,_}|_]=SortedMoves=lists:sort(fun({_,R1},{_,R2})-> R1>R2 end, RatedMoves),
 	io:format("Candidate moves: ~p~n",[lists:sublist(SortedMoves,10)]),
-	{_,_,_,_,Aggregates} = NewEval = change_evaluation(CurrEval,M,MyColor),
-	io:format("State value: ~p~n",[get_value(Aggregates,W)]),
+	{_,_,_,_,Aggregates,W} = NewEval = change_evaluation(CurrEval,M,MyColor),
+	io:format("State value: ~p~n",[get_value(Aggregates,W,MyColor)]),
 	{M,NewEval}.
 
 
@@ -74,7 +106,7 @@ change_evaluation(no_evaluation, {8,8}, blacks) ->
 	{2,{8,8},Board} = state:init_state([{8,8}]),
 	init_evaluation(Board);
 
-change_evaluation({Vert,Hor,D1,D2,Cnts}, {I,J}, OppColor) -> 
+change_evaluation({Vert,Hor,D1,D2,Cnts,W}, {I,J}, OppColor) -> 
 	%io:format("before move:~p~n",[dict:to_list(Cnts)]),
 	Column = element(I,Vert),
 	{Cnts1,Column1} = lists:foldl(fun(N,{Dict,Col})->
@@ -137,11 +169,11 @@ change_evaluation({Vert,Hor,D1,D2,Cnts}, {I,J}, OppColor) ->
 			D22 = erlang:insert_element(D2_index,D21,Diag12)
 	end,
 	%io:format("~p~n",[dict:to_list(Cnts4)]),
-	{Vert2,Hor2,D12,D22,Cnts4}.
+	{Vert2,Hor2,D12,D22,Cnts4,W}.
 
 
 
-estimate_move({I,J},{Vert,Hor,D1,D2,_},MyColor,W) ->
+estimate_move({I,J},{Vert,Hor,D1,D2,_,W},MyColor) ->
 	Cnts = fiver:init_counters(),
 	Column = element(I,Vert),
 	Cnts1 = lists:foldl(fun(N,Acc)->
@@ -182,38 +214,14 @@ estimate_move({I,J},{Vert,Hor,D1,D2,_},MyColor,W) ->
 				dict:update_counter(S1,1,dict:update_counter(S,-1,Acc))
 			end,Cnts3,lists:seq(max(Ind2-4,1),min(Ind2,Size2) ))
 	end,
-	get_value(Cnts4,W).
+	get_value(Cnts4,W,MyColor).
 
 
-get_value(Evaluation,W) ->
+
+get_value(Evaluation,W,Color) ->
 	lists:foldl(fun(Key,Acc)->
-		Acc + dict:fetch(Key,Evaluation)*dict:fetch(Key,W)
+		Acc + dict:fetch(Key,Evaluation)*dict:fetch({Key,Color},W)
 	end,0,dict:fetch_keys(Evaluation)).
-
-
-
--define(MY_SINGL,0).
--define(OPP_SINGL,-0.5).
--define(MY_DUPL,2).
--define(OPP_DUPL,-4).
--define(MY_TRIPL,7).
--define(OPP_TRIPL,-14).
--define(MY_QUART,26).
--define(OPP_QUART,-51).
--define(MY_QUINT,100).
--define(OPP_QUINT,-100).
--define(FREE,0).
--define(MIXED,0).
-
-% coefficients of W vector to be applied after an agent of a given color made its ply 
-w(blacks) -> dict:from_list([{free,?FREE},{mixed,?MIXED},{b_singlet,?MY_SINGL},
-	{w_singlet,?OPP_SINGL},{b_duplet,?MY_DUPL},{w_duplet,?OPP_DUPL},
-	{b_triplet,?MY_TRIPL},{w_triplet,?OPP_TRIPL},{b_quartet,?MY_QUART},
-	{w_quartet,?OPP_QUART},{b_quintet,?MY_QUINT},{w_quintet,?OPP_QUINT}]);
-w(whites) -> dict:from_list([{free,?FREE},{mixed,?MIXED},{b_singlet,?OPP_SINGL},
-	{w_singlet,?MY_SINGL},{b_duplet,?OPP_DUPL},{w_duplet,?MY_DUPL},
-	{b_triplet,?OPP_TRIPL},{w_triplet,?MY_TRIPL},{b_quartet,?OPP_QUART},
-	{w_quartet,?MY_QUART},{b_quintet,?OPP_QUINT},{w_quintet,?MY_QUINT}]).
 
 
 
