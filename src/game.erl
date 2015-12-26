@@ -43,4 +43,4 @@ run({Turn,_,_}=State,Blacks,B_eval,Whites,W_eval) ->
 
 
 
-convert({I,J}) -> [lists:nth(I,"abcdefghijklmnop")|integer_to_list(J)].
+convert({I,J}) -> [lists:nth(I,"abcdefghijklmno")|integer_to_list(J)].

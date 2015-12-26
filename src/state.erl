@@ -52,7 +52,7 @@ print_state({Turn,Board}) -> io:format("Turn:~p~n",[Turn]), print_board(Board).
 print_board(Board) ->
 	Rows = lists:reverse(tuple_to_list(Board)),
 	print_rows(15,Rows),
-	io:format("   a b c d f g h i j k l m n o p~n~n").
+	io:format("   a b c d e f g h i j k l m n o~n~n").
 
 print_rows(N,[Row|Rows]) ->
 	print_stones(pad3(integer_to_list(N)++" "), lists:reverse(tuple_to_list(Row)),""),

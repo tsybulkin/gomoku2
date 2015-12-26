@@ -32,9 +32,9 @@ enter_move(N) ->
 			enter_move(N-1);
 		{ok,[[X|Y]]} ->
 			Y1 = list_to_integer(Y),
-			case lists:member(X,"abcdefghijklmnop") andalso Y1>0 andalso Y1<16 of
+			case lists:member(X,"abcdefghijklmno") andalso Y1>0 andalso Y1<16 of
 				true ->
-					X1 = length(lists:takewhile(fun(A)-> A=/=X end,"abcdefghijklmnop")),
+					X1 = 1+length(lists:takewhile(fun(A)-> A=/=X end,"abcdefghijklmno")),
 					{X1,Y1};
 				false->
 					io:format("Move format should be as it is shown: d4 or i10 or m7.~nPlease try again.~n"),
