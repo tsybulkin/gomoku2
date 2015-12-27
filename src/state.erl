@@ -49,7 +49,7 @@ convert({I,J}) -> [lists:nth(I,"abcdefghijklmno")|integer_to_list(J)].
 
 
 
-print_state({Turn,Board}) -> io:format("Turn:~p~n",[Turn]), print_board(Board).
+print_state({Turn,_,Board}) -> io:format("Turn:~p~n",[Turn]), print_board(Board).
 
 
 

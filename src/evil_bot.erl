@@ -11,11 +11,14 @@
 -export([
 		init_evaluation/1,
 		change_evaluation/3,
-		estimate_move/3,
+		get_counters_after_move/3,
 		get_move/2,
+		get_best_moves/2,
 		get_value/3
 		]).
 
+-define(TERMINAL_VALUE,100).
+-define(THRESHOLD,0.75).
 
 -define(MY_SINGL,0).
 -define(OPP_SINGL,-0.5).
@@ -89,14 +92,32 @@ get_move({1,_,_}=State,no_evaluation) ->
 get_move({Turn,LastMove,_}=State,LastEval) ->
 	OppColor = state:color(Turn-1),
 	MyColor = state:color(Turn),
-	{_,_,_,_,_,W}=CurrEval = change_evaluation(LastEval,LastMove,OppColor),
-	CandidateMoves = moves:get_candidate_moves(State),
-	RatedMoves = [ {Move,estimate_move(Move,CurrEval,MyColor)} || Move <- CandidateMoves],
-	[{M,_}|_]=SortedMoves=lists:sort(fun({_,R1},{_,R2})-> R1>R2 end, RatedMoves),
-	io:format("Candidate moves: ~p~n",[lists:sublist(SortedMoves,10)]),
-	{_,_,_,_,Aggregates,W} = NewEval = change_evaluation(CurrEval,M,MyColor),
-	io:format("State value: ~p~n",[get_value(Aggregates,W,MyColor)]),
+	CurrEval = change_evaluation(LastEval,LastMove,OppColor),
+	[{M,_}|_] = BestMoves = get_best_moves(State,CurrEval),
+	io:format("Best moves: ~p~n",[BestMoves]),
+
+	NewEval = change_evaluation(CurrEval,M,MyColor),
 	{M,NewEval}.
+
+
+
+get_best_moves(State,CurrEval) ->
+	{Turn,_,_}=State, MyColor=state:color(Turn),
+	{_,_,_,_,_,W}=CurrEval,
+	CandidateMoves = moves:get_candidate_moves(State),
+	RatedMoves = [ {Move,get_value(get_counters_after_move(Move,CurrEval,MyColor),W,MyColor)} 
+		|| Move <- CandidateMoves],
+	[{_,MaxRate}|_]=SortedMoves=lists:sort(fun({_,R1},{_,R2})-> R1>R2 end, RatedMoves),
+	Shift = 50 - MaxRate, Thld = 50*?THRESHOLD,
+	Res = lists:filter(fun({_,R})-> R+Shift > Thld end,SortedMoves),
+	if Res=:=[] -> 
+		state:print_state(State),
+		io:format("SortedMoves:~p~n,CurrEval:~p~n",[SortedMoves,CurrEval]),
+		error(empty_list);
+
+		true -> Res
+	end.
+	
 
 
 
@@ -173,8 +194,8 @@ change_evaluation({Vert,Hor,D1,D2,Cnts,W}, {I,J}, OppColor) ->
 
 
 
-estimate_move({I,J},{Vert,Hor,D1,D2,_,W},MyColor) ->
-	Cnts = fiver:init_counters(),
+get_counters_after_move({I,J},{Vert,Hor,D1,D2,Cnts,_},MyColor) ->
+	%Cnts = fiver:init_counters(),
 	Column = element(I,Vert),
 	Cnts1 = lists:foldl(fun(N,Acc)->
 		S = element(N,Column),
@@ -214,14 +235,28 @@ estimate_move({I,J},{Vert,Hor,D1,D2,_,W},MyColor) ->
 				dict:update_counter(S1,1,dict:update_counter(S,-1,Acc))
 			end,Cnts3,lists:seq(max(Ind2-4,1),min(Ind2,Size2) ))
 	end,
-	get_value(Cnts4,W,MyColor).
+	Cnts4.
 
 
 
-get_value(Evaluation,W,Color) ->
-	lists:foldl(fun(Key,Acc)->
-		Acc + dict:fetch(Key,Evaluation)*dict:fetch({Key,Color},W)
-	end,0,dict:fetch_keys(Evaluation)).
 
+get_value(Cnts,W,Color) ->
+	Black_quintet = dict:fetch(b_quintet,Cnts),
+	White_quintet = dict:fetch(w_quintet,Cnts),
+
+	case {Color,Black_quintet,White_quintet} of
+		{_,0,0} ->
+			lists:foldl(fun(Key,Acc)->
+				Acc + dict:fetch(Key,Cnts)*dict:fetch({Key,Color},W)
+			end,0,dict:fetch_keys(Cnts));
+		
+		{blacks,0,_} -> -?TERMINAL_VALUE;
+
+		{blacks,_,_} -> ?TERMINAL_VALUE;
+
+		{whites,0,_} -> ?TERMINAL_VALUE;
+
+		{whites,_,_} -> -?TERMINAL_VALUE
+	end.
 
 
