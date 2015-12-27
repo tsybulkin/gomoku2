@@ -13,6 +13,7 @@
 		change_evaluation/3,
 		get_counters_after_move/3,
 		get_move/2,
+		save_data/1,
 		get_best_moves/2,
 		get_value/3
 		]).
@@ -33,6 +34,9 @@
 -define(FREE,0).
 -define(MIXED,0).
 
+
+
+save_data(_) -> ok.
 
 
 init_w() -> dict:from_list([{{free,blacks},?FREE},{{free,whites},?FREE},

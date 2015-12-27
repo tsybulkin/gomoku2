@@ -12,11 +12,16 @@
 -module(evilearn_bot).
 -export([
 		get_move/2,
-		choose_move/1
+		save_data/1
 		]).
 
 -define(TERMINAL_VALUE,100).
+-define(ALPHA,0.1).
 
+
+
+save_data({_,_,_,_,_,W}) -> 
+	file:write_file("data/evilearn_W_vector.dat",io_lib:format("~tp.~n", [W])).
 
 
 % the agent utilises evil_boat methods as init_valuation() or change_evaluation()
@@ -24,7 +29,11 @@
 get_move({1,_,_}=State,no_evaluation) -> 
 	FirstMove = {8,8},
 	{_,_,Board} = state:change_state(State,FirstMove),
-	{ FirstMove,evil_bot:init_evaluation(Board)};
+	{V,H,D1,D2,Cnts,W} = evil_bot:init_evaluation(Board),
+	case file:consult("data/evilearn_W_vector.dat") of
+		{ok,[W1]} -> { FirstMove,{V,H,D1,D2,Cnts,W1}};
+		{error,_} -> { FirstMove,{V,H,D1,D2,Cnts,W}}
+	end;
 get_move({Turn,LastMove,_}=State,LastEval) ->
 	OppColor = state:color(Turn-1),
 	MyColor = state:color(Turn),
@@ -68,9 +77,6 @@ est_value({whites_won,_},_,blacks) -> -?TERMINAL_VALUE;
 est_value({whites_won,_},_,whites) -> ?TERMINAL_VALUE;
 est_value(draw,_,_) -> 0.
 
-
-
-	
 
 
 

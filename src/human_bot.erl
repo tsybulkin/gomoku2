@@ -9,8 +9,12 @@
 
 -module(human_bot).
 -export([
-		get_move/2
+		get_move/2,
+		save_data/1
 		]).
+
+
+save_data(_) -> ok.
 
 
 

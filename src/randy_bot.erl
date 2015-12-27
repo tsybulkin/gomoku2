@@ -8,7 +8,8 @@
 
 -module(randy_bot).
 -export([
-		get_move/2
+		get_move/2,
+		save_data/1
 		]).
 
 
@@ -28,4 +29,4 @@ get_rand_move(Size,N_attempts,Board) ->
 	end.
 
 
-
+save_data(_) -> ok.
