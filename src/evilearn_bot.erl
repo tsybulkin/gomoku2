@@ -15,7 +15,6 @@
 		choose_move/1
 		]).
 
--define(THRESHOLD,0.75).
 -define(TERMINAL_VALUE,100).
 
 
@@ -25,7 +24,7 @@
 get_move({1,_,_}=State,no_evaluation) -> 
 	FirstMove = {8,8},
 	{_,_,Board} = state:change_state(State,FirstMove),
-	{ FirstMove,evil_boat:init_evaluation(Board)};
+	{ FirstMove,evil_bot:init_evaluation(Board)};
 get_move({Turn,LastMove,_}=State,LastEval) ->
 	OppColor = state:color(Turn-1),
 	MyColor = state:color(Turn),
@@ -34,7 +33,7 @@ get_move({Turn,LastMove,_}=State,LastEval) ->
 	Moves = rate_best_moves(State,CurrEval,MyColor),
 	io:format("Rated moves: ~p~n",[Moves]),
 
-	M = choose_move([ Mo ||{Mo,_,_}<-Moves]),
+	M = choose_move([ Mo || {Mo,_,_} <- Moves]),
 	
 	{_,_,_,_,Aggregates,W} = NewEval = evil_bot:change_evaluation(CurrEval,M,MyColor),
 	io:format("State value: ~p~n",[evil_bot:get_value(Aggregates,W,MyColor)]),
@@ -75,7 +74,11 @@ est_value(draw,_,_) -> 0.
 
 
 
-choose_move(Moves) -> 
-	N = random:uniform(length(Moves)),
-	lists:nth(N,Moves).
-	
+choose_move(Moves) -> choose_move(Moves,1).
+
+choose_move(Moves,J) ->
+	case random:uniform()<0.77 of
+		true -> lists:nth(1+((J-1) rem length(Moves)),Moves);
+		false-> choose_move(Moves,J+1)
+	end.
+
