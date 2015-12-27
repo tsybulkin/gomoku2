@@ -31,8 +31,10 @@ get_move({Turn,LastMove,_}=State,LastEval) ->
 	MyColor = state:color(Turn),
 	{_,_,_,_,_,W}=CurrEval = evil_bot:change_evaluation(LastEval,LastMove,OppColor),
 	
-	[{M,_,_}|_] = Moves = rate_best_moves(State,CurrEval,MyColor),
+	Moves = rate_best_moves(State,CurrEval,MyColor),
 	io:format("Rated moves: ~p~n",[Moves]),
+
+	M = choose_move([ Mo ||{Mo,_,_}<-Moves]),
 	
 	{_,_,_,_,Aggregates,W} = NewEval = evil_bot:change_evaluation(CurrEval,M,MyColor),
 	io:format("State value: ~p~n",[evil_bot:get_value(Aggregates,W,MyColor)]),
@@ -43,9 +45,10 @@ get_move({Turn,LastMove,_}=State,LastEval) ->
 % with its state evaluation and afterstate evaluation
 rate_best_moves(State,CurrEval,MyColor) ->
 	BestMoves = evil_bot:get_best_moves(State,CurrEval),
-	[ { Move,R,est_value(state:change_state(State,Move),
-						evil_bot:change_evaluation(CurrEval,Move,MyColor),
-						MyColor) } || {Move,R} <- BestMoves ].
+	lists:sort(fun({_,_,A},{_,_,B}) -> A>B end,
+		[ { Move,R,est_value(state:change_state(State,Move),
+							evil_bot:change_evaluation(CurrEval,Move,MyColor),
+							MyColor) } || {Move,R} <- BestMoves ]).
 
 
 
@@ -54,10 +57,10 @@ est_value({Turn,_,_}=State,CurrEval,MyColor) ->
 
 	case state:color(Turn) of
 		MyColor -> [{_,R}|_] = evil_bot:get_best_moves(State,CurrEval), R;
-		_ -> 
+		OppColor -> 
 			BestMoves = evil_bot:get_best_moves(State,CurrEval),
 			lists:sum([est_value(state:change_state(State,M),
-								evil_bot:change_evaluation(CurrEval,M,MyColor),
+								evil_bot:change_evaluation(CurrEval,M,OppColor),
 								MyColor)||{M,_}<-BestMoves]) / length(BestMoves)
 	end;
 est_value({blacks_won,_},_,blacks) -> ?TERMINAL_VALUE;
@@ -72,11 +75,7 @@ est_value(draw,_,_) -> 0.
 
 
 
-choose_move(Moves) -> choose_move(Moves,0).
+choose_move(Moves) -> 
+	N = random:uniform(length(Moves)),
+	lists:nth(N,Moves).
 	
-choose_move([{M,P}|Moves],P0) ->
-	case random:uniform() < P+P0 of
-		true -> M;
-		false-> choose_move(Moves,P0+P)
-	end.
-
