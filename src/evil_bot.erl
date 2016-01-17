@@ -8,12 +8,14 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -module(evil_bot).
--export([
+-export([							% mondatory methods of any agent
+		get_move/2, learn_dataset/1
+		]). 
+
+-export([							% methods shared with evilearn_bot
 		init_evaluation/1,
 		change_evaluation/3,
 		get_counters_after_move/3,
-		get_move/2,
-		save_data/1,
 		get_best_moves/2,
 		get_value/3
 		]).
@@ -34,11 +36,6 @@
 -define(FREE,0).
 -define(MIXED,0).
 
-
-
-save_data(_) -> ok.
-
-
 init_w() -> dict:from_list([{{free,blacks},?FREE},{{free,whites},?FREE},
 	{{mixed,blacks},?MIXED},{{mixed,whites},?MIXED},
 	{{b_singlet,blacks},?MY_SINGL},{{w_singlet,blacks},?OPP_SINGL},
@@ -51,6 +48,12 @@ init_w() -> dict:from_list([{{free,blacks},?FREE},{{free,whites},?FREE},
 	{{b_triplet,whites},?OPP_TRIPL},{{w_triplet,whites},?MY_TRIPL},
 	{{b_quartet,whites},?OPP_QUART},{{w_quartet,whites},?MY_QUART},
 	{{b_quintet,whites},?OPP_QUINT},{{w_quintet,whites},?MY_QUINT}]).
+
+
+
+
+learn_dataset(_) -> ok.
+
 
 
 
@@ -92,16 +95,16 @@ init_evaluation(Board) ->
 get_move({1,_,_}=State,no_evaluation) -> 
 	FirstMove = {8,8},
 	{_,_,Board} = state:change_state(State,FirstMove),
-	{ FirstMove,init_evaluation(Board)};
+	{ FirstMove,init_evaluation(Board), []};
 get_move({Turn,LastMove,_}=State,LastEval) ->
 	OppColor = state:color(Turn-1),
 	MyColor = state:color(Turn),
 	CurrEval = change_evaluation(LastEval,LastMove,OppColor),
-	[{M,_}|_] = BestMoves = get_best_moves(State,CurrEval),
+	[{M,_,_}|_] = BestMoves = get_best_moves(State,CurrEval),
 	io:format("Best moves: ~p~n",[BestMoves]),
 
 	NewEval = change_evaluation(CurrEval,M,MyColor),
-	{M,NewEval}.
+	{M,NewEval,[]}.
 
 
 
@@ -113,15 +116,9 @@ get_best_moves(State,CurrEval) ->
 		|| Move <- CandidateMoves],
 	[{_,MaxRate}|_]=SortedMoves=lists:sort(fun({_,R1},{_,R2})-> R1>R2 end, RatedMoves),
 	Shift = 50 - MaxRate, Thld = 50*?THRESHOLD,
-	Res = lists:filter(fun({_,R})-> R+Shift > Thld end,SortedMoves),
-	if Res=:=[] -> 
-		state:print_state(State),
-		io:format("SortedMoves:~p~n,CurrEval:~p~n",[SortedMoves,CurrEval]),
-		error(empty_list);
-
-		true -> Res
-	end.
-	
+	Selected = lists:filter(fun({_,R})-> R+Shift > Thld end,SortedMoves),
+	Norma = lists:sum([ R ||{_,R} <- Selected ]) + (Shift-Thld+1)*length(Selected),
+	[ {M,R,(R+Shift-Thld+1)/Norma} || {M,R} <- Selected].
 
 
 
@@ -245,22 +242,8 @@ get_counters_after_move({I,J},{Vert,Hor,D1,D2,Cnts,_},MyColor) ->
 
 
 get_value(Cnts,W,Color) ->
-	Black_quintet = dict:fetch(b_quintet,Cnts),
-	White_quintet = dict:fetch(w_quintet,Cnts),
-
-	case {Color,Black_quintet,White_quintet} of
-		{_,0,0} ->
-			lists:foldl(fun(Key,Acc)->
-				Acc + dict:fetch(Key,Cnts)*dict:fetch({Key,Color},W)
-			end,0,dict:fetch_keys(Cnts));
-		
-		{blacks,0,_} -> -?TERMINAL_VALUE;
-
-		{blacks,_,_} -> ?TERMINAL_VALUE;
-
-		{whites,0,_} -> ?TERMINAL_VALUE;
-
-		{whites,_,_} -> -?TERMINAL_VALUE
-	end.
-
+	lists:foldl(fun(Key,Acc)->
+		Acc + dict:fetch(Key,Cnts)*dict:fetch({Key,Color},W)
+	end,0,dict:fetch_keys(Cnts)).
+	
 

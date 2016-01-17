@@ -7,7 +7,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -module(game).
--export([run/2
+-export([run/2,
+		run_match/3
 		]).
 
 
@@ -20,39 +21,48 @@
 % returns blacks_won, whites_won, or draw
 run(Blacks,Whites) ->
 	State = state:init_state(),
-	run(State,Blacks,no_evaluation,Whites,no_evaluation).
+	run(State,Blacks,no_evaluation,[],Whites,no_evaluation,[]).
 
-run({Turn,_,_}=State,Blacks,B_eval,Whites,W_eval) when Turn rem 2 =:= 0 ->
-	{Move,W_eval1} = Whites:get_move(State,W_eval),
+run({Turn,_,_}=State,Blacks,B_eval,TrainingSetB,Whites,W_eval,TrainingSetW) ->
+	Color = state:color(Turn),
+	case Color of
+		blacks -> {Move,B_eval1,TrainingCases} = Blacks:get_move(State,B_eval), W_eval1=W_eval;
+		whites -> {Move,W_eval1,TrainingCases} = Whites:get_move(State,W_eval), B_eval1=B_eval
+	end,
+
 	case state:change_state(State,Move) of
 		{whites_won,_Fiver} -> 
-			save_data(Blacks,B_eval,Whites,W_eval),
+			Blacks:learn_dataset(TrainingSetB),
+			Whites:learn_dataset(TrainingSetW),
 			whites_won;
 		draw -> 
-			save_data(Blacks,B_eval,Whites,W_eval),
+			Blacks:learn_dataset(TrainingSetB),
+			Whites:learn_dataset(TrainingSetW),
 			draw;
 		NextState -> 
-			io:format("(~p) Whites' move: ~p~n",[Turn,state:convert(Move)]),
-			run(NextState,Blacks,B_eval,Whites,W_eval1)
-	end;
-run({Turn,_,_}=State,Blacks,B_eval,Whites,W_eval) ->
-	{Move,B_eval1} = Blacks:get_move(State,B_eval),
-	case state:change_state(State,Move) of
-		{blacks_won,_Fiver} -> 
-			save_data(Blacks,B_eval,Whites,W_eval),
-			blacks_won;
-		draw -> 
-			save_data(Blacks,B_eval,Whites,W_eval),
-			draw;
-		NextState -> 
-			io:format("(~p) Blacks' move: ~p~n",[Turn,state:convert(Move)]),
-			run(NextState,Blacks,B_eval1,Whites,W_eval)
+			case Color of
+				blacks ->
+					io:format("(~p) Blacks' move: ~p~n",[Turn,state:convert(Move)]),
+					run(NextState,Blacks,B_eval1,TrainingCases++TrainingSetB,Whites,W_eval1,TrainingSetW);
+				whites ->
+					io:format("(~p) Whites' move: ~p~n",[Turn,state:convert(Move)]), 
+					run(NextState,Blacks,B_eval1,TrainingSetB,Whites,W_eval1,TrainingCases++TrainingSetW)
+			end
 	end.
 
 
-save_data(Blacks,B_eval,Whites,W_eval) ->
-	Blacks:save_data(B_eval),
-	Whites:save_data(W_eval).
 
-	
+% returns score
+run_match(Blacks,Whites,Game_number) -> run_match(Blacks,Whites,Game_number,0,0,0).
+
+run_match(_,_,0,B_won,Draw,W_won) -> {B_won,Draw,W_won};
+run_match(Blacks,Whites,Game_number,B_won,Draw,W_won) ->
+	case run(Blacks,Whites) of
+		blacks_won -> run_match(Blacks,Whites,Game_number-1,B_won+1,Draw,W_won);
+		whites_won -> run_match(Blacks,Whites,Game_number-1,B_won,Draw,W_won+1);
+		draw -> run_match(Blacks,Whites,Game_number-1,B_won,Draw+1,W_won)
+	end.
+
+
+
 

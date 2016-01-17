@@ -10,18 +10,19 @@
 -module(human_bot).
 -export([
 		get_move/2,
-		save_data/1
+		learn_dataset/1
 		]).
 
 
-save_data(_) -> ok.
+
+learn_dataset(_) -> ok.
 
 
 
 get_move({_,_,Board},_) -> 
 	{X,Y} = enter_move(2),
 	case element(X,element(Y,Board)) of
-		e -> { {X,Y}, no_evaluation};
+		e -> { {X,Y}, no_evaluation, []};
 		_ -> io:format("Entered position is already occupied. Choose another one~n"),
 			enter_move(1)
 	end.
