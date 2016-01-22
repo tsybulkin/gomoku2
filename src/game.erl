@@ -7,9 +7,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 -module(game).
--export([run/2,
-		run_match/3,
-		evil_genesys/2
+-export([run/2, run/5,
+		run_match/3
 		]).
 
 
@@ -68,8 +67,5 @@ run_match(Blacks,Whites,Game_number,B_won,Draw,W_won) ->
 	end.
 
 
-
-
-evil_genesys(Nbr_bot, Nbr_matches) -> ok.
 
 

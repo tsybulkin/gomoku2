@@ -22,7 +22,7 @@ learn_dataset(_) -> ok.
 get_move({_,_,Board},_) -> 
 	{X,Y} = enter_move(2),
 	case element(X,element(Y,Board)) of
-		e -> { {X,Y}, no_evaluation, []};
+		e -> { {X,Y}, no_evaluation};
 		_ -> io:format("Entered position is already occupied. Choose another one~n"),
 			enter_move(1)
 	end.

@@ -36,19 +36,28 @@
 -define(FREE,0).
 -define(MIXED,0).
 
-init_w() -> dict:from_list([{{free,blacks},?FREE},{{free,whites},?FREE},
-	{{mixed,blacks},?MIXED},{{mixed,whites},?MIXED},
-	{{b_singlet,blacks},?MY_SINGL},{{w_singlet,blacks},?OPP_SINGL},
-	{{b_duplet,blacks},?MY_DUPL},{{w_duplet,blacks},?OPP_DUPL},
-	{{b_triplet,blacks},?MY_TRIPL},{{w_triplet,blacks},?OPP_TRIPL},
-	{{b_quartet,blacks},?MY_QUART},{{w_quartet,blacks},?OPP_QUART},
-	{{b_quintet,blacks},?MY_QUINT},{{w_quintet,blacks},?OPP_QUINT},
-	{{b_singlet,whites},?OPP_SINGL},{{w_singlet,whites},?MY_SINGL},
-	{{b_duplet,whites},?OPP_DUPL},{{w_duplet,whites},?MY_DUPL},
-	{{b_triplet,whites},?OPP_TRIPL},{{w_triplet,whites},?MY_TRIPL},
-	{{b_quartet,whites},?OPP_QUART},{{w_quartet,whites},?MY_QUART},
-	{{b_quintet,whites},?OPP_QUINT},{{w_quintet,whites},?MY_QUINT}]).
+-define(W_DIVERGENCE,1.2).
 
+
+init_w() -> 
+	random:seed(now()),
+	dict:from_list([{{free,blacks},d(?FREE)},{{free,whites},d(?FREE)},
+	{{mixed,blacks},d(?MIXED)},{{mixed,whites},d(?MIXED)},
+	{{b_singlet,blacks},d(?MY_SINGL)},{{w_singlet,blacks},d(?OPP_SINGL)},
+	{{b_duplet,blacks},d(?MY_DUPL)},{{w_duplet,blacks},d(?OPP_DUPL)},
+	{{b_triplet,blacks},d(?MY_TRIPL)},{{w_triplet,blacks},d(?OPP_TRIPL)},
+	{{b_quartet,blacks},d(?MY_QUART)},{{w_quartet,blacks},d(?OPP_QUART)},
+	{{b_quintet,blacks},d(?MY_QUINT)},{{w_quintet,blacks},d(?OPP_QUINT)},
+	{{b_singlet,whites},d(?OPP_SINGL)},{{w_singlet,whites},d(?MY_SINGL)},
+	{{b_duplet,whites},d(?OPP_DUPL)},{{w_duplet,whites},d(?MY_DUPL)},
+	{{b_triplet,whites},d(?OPP_TRIPL)},{{w_triplet,whites},d(?MY_TRIPL)},
+	{{b_quartet,whites},d(?OPP_QUART)},{{w_quartet,whites},d(?MY_QUART)},
+	{{b_quintet,whites},d(?OPP_QUINT)},{{w_quintet,whites},d(?MY_QUINT)}]).
+
+
+d(V) -> d(V,?W_DIVERGENCE).
+d(V,1) -> V;
+d(V,D) -> V/D + random:uniform()*V*(D-1/D).
 
 
 
@@ -96,6 +105,11 @@ get_move({1,_,_}=State,no_evaluation) ->
 	FirstMove = {8,8},
 	{_,_,Board} = state:change_state(State,FirstMove),
 	{ FirstMove,init_evaluation(Board)};
+get_move({1,_,_}=State,{given_W,W}) -> 
+	FirstMove = {8,8},
+	{_,_,Board} = state:change_state(State,FirstMove),
+	{V,H,D1,D2,Counts,_} = init_evaluation(Board),
+	{ FirstMove,{V,H,D1,D2,Counts,W} };
 get_move({Turn,LastMove,_}=State,LastEval) ->
 	OppColor = state:color(Turn-1),
 	MyColor = state:color(Turn),
@@ -128,6 +142,11 @@ get_best_moves(State,CurrEval) ->
 change_evaluation(no_evaluation, {8,8}, blacks) -> 
 	{2,{8,8},Board} = state:init_state([{8,8}]),
 	init_evaluation(Board);
+
+change_evaluation({given_W,W}, {8,8}, blacks) -> 
+	{2,{8,8},Board} = state:init_state([{8,8}]),
+	{V,H,D1,D2,Counts,_} = init_evaluation(Board),
+	{V,H,D1,D2,Counts,W};
 
 change_evaluation({Vert,Hor,D1,D2,Cnts,W}, {I,J}, OppColor) -> 
 	%io:format("before move:~p~n",[dict:to_list(Cnts)]),
