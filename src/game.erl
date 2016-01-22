@@ -23,8 +23,9 @@ run(Blacks,Whites) ->
 	State = state:init_state(),
 	run(State,Blacks,no_evaluation,[],Whites,no_evaluation,[]).
 
-run({Turn,_,_}=State,Blacks,B_eval,TrainingSetB,Whites,W_eval,TrainingSetW) ->
+run({Turn,_,Board}=State,Blacks,B_eval,TrainingSetB,Whites,W_eval,TrainingSetW) ->
 	Color = state:color(Turn),
+	state:print_board(Board),
 	case Color of
 		blacks -> {Move,B_eval1,TrainingCases} = Blacks:get_move(State,B_eval), W_eval1=W_eval;
 		whites -> {Move,W_eval1,TrainingCases} = Whites:get_move(State,W_eval), B_eval1=B_eval
@@ -35,6 +36,12 @@ run({Turn,_,_}=State,Blacks,B_eval,TrainingSetB,Whites,W_eval,TrainingSetW) ->
 			Blacks:learn_dataset(TrainingSetB),
 			Whites:learn_dataset(TrainingSetW),
 			whites_won;
+			
+		{blacks_won,_Fiver} -> 
+			Blacks:learn_dataset(TrainingSetB),
+			Whites:learn_dataset(TrainingSetW),
+			blacks_won;
+
 		draw -> 
 			Blacks:learn_dataset(TrainingSetB),
 			Whites:learn_dataset(TrainingSetW),

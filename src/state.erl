@@ -31,7 +31,7 @@ change_state({Turn,_,Board},{I,J}) ->
 		blacks -> Row2 = erlang:insert_element(I,Row1,b)
 	end,
 	Next_state = {Turn+1,{I,J},Board2=erlang:insert_element(J,Board1,Row2)},
-	print_board(Board2),
+	%print_board(Board2),
 
 	case lines:check_five(Next_state) of
 		false when Turn =:= 59 -> draw;

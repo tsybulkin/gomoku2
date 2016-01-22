@@ -12,7 +12,7 @@
 		get_move/2, learn_dataset/1
 		]). 
 
--export([							% methods shared with evilearn_bot
+-export([							% methods shared with smart_bot
 		init_evaluation/1,
 		change_evaluation/3,
 		get_counters_after_move/3,
@@ -100,9 +100,10 @@ get_move({Turn,LastMove,_}=State,LastEval) ->
 	OppColor = state:color(Turn-1),
 	MyColor = state:color(Turn),
 	CurrEval = change_evaluation(LastEval,LastMove,OppColor),
-	[{M,_,_}|_] = BestMoves = get_best_moves(State,CurrEval),
+	BestMoves = get_best_moves(State,CurrEval),
 	io:format("Best moves: ~p~n",[BestMoves]),
 
+	M = smart_bot:choose_move([ {M,P} || {M,_,P}<-BestMoves]),
 	NewEval = change_evaluation(CurrEval,M,MyColor),
 	{M,NewEval,[]}.
 

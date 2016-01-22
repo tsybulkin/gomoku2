@@ -9,15 +9,20 @@
 
 
 
--module(evilearn_bot).
+-module(smart_bot).
 -export([
 		get_move/2,
-		save_data/1
+		learn_dataset/1
 		]).
+
+-export([choose_move/1]).
 
 -define(TERMINAL_VALUE,100).
 -define(ALPHA,0).
 
+
+
+learn_dataset(_) -> ok.
 
 
 save_data({_,_,_,_,_,W}) -> 
@@ -48,8 +53,13 @@ get_move({Turn,LastMove,_}=State,LastEval) ->
 	end, CurrEval = {V0,H0,D10,D20,Cnts0,W},
 	
 	Moves = rate_best_moves(State,CurrEval,MyColor),
+
+	%% MODIFY
+
 	Features = lists:foldl(fun({M,_,_},Feat)-> 
 		Cn = evil_bot:get_counters_after_move(M,CurrEval,MyColor),
+		
+		%io:format("After move ~p counters: ~p~n",[state:convert(M),[ {Fi,V} ||{Fi,V}<-dict:to_list(Cn)] ]),
 		lists:foldl(fun(Key,D)->
 			dict:store({M,Key},dict:fetch(Key,Cn),D)
 		end,Feat,dict:fetch_keys(Cn))
