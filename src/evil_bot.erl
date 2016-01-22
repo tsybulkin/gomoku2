@@ -95,7 +95,7 @@ init_evaluation(Board) ->
 get_move({1,_,_}=State,no_evaluation) -> 
 	FirstMove = {8,8},
 	{_,_,Board} = state:change_state(State,FirstMove),
-	{ FirstMove,init_evaluation(Board), []};
+	{ FirstMove,init_evaluation(Board)};
 get_move({Turn,LastMove,_}=State,LastEval) ->
 	OppColor = state:color(Turn-1),
 	MyColor = state:color(Turn),
@@ -105,7 +105,7 @@ get_move({Turn,LastMove,_}=State,LastEval) ->
 
 	M = smart_bot:choose_move([ {M,P} || {M,_,P}<-BestMoves]),
 	NewEval = change_evaluation(CurrEval,M,MyColor),
-	{M,NewEval,[]}.
+	{M,NewEval}.
 
 
 

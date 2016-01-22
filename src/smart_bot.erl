@@ -36,8 +36,8 @@ get_move({1,_,_}=State,no_evaluation) ->
 	{_,_,Board} = state:change_state(State,FirstMove),
 	{V,H,D1,D2,Cnts,W} = evil_bot:init_evaluation(Board),
 	case file:consult("data/evilearn_W_vector.dat") of
-		{ok,[W1]} -> { FirstMove,{V,H,D1,D2,Cnts,W1},[] };
-		{error,_} -> { FirstMove,{V,H,D1,D2,Cnts,W},[] }
+		{ok,[W1]} -> { FirstMove,{V,H,D1,D2,Cnts,W1} };
+		{error,_} -> { FirstMove,{V,H,D1,D2,Cnts,W} }
 	end;
 get_move({Turn,LastMove,_}=State,LastEval) ->
 	OppColor = state:color(Turn-1),
@@ -58,8 +58,6 @@ get_move({Turn,LastMove,_}=State,LastEval) ->
 
 	Features = lists:foldl(fun({M,_,_},Feat)-> 
 		Cn = evil_bot:get_counters_after_move(M,CurrEval,MyColor),
-		
-		%io:format("After move ~p counters: ~p~n",[state:convert(M),[ {Fi,V} ||{Fi,V}<-dict:to_list(Cn)] ]),
 		lists:foldl(fun(Key,D)->
 			dict:store({M,Key},dict:fetch(Key,Cn),D)
 		end,Feat,dict:fetch_keys(Cn))
@@ -73,7 +71,7 @@ get_move({Turn,LastMove,_}=State,LastEval) ->
 	W1 = learn(W,Moves,Features,MyColor),
 	
 	{V,H,D1,D2,F,W} = evil_bot:change_evaluation(CurrEval,M,MyColor),
-	{M,{V,H,D1,D2,F,W1},[] }.
+	{M,{V,H,D1,D2,F,W1} }.
 
 
 % evaluate afterstate values and returns the list of best moves

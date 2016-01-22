@@ -8,7 +8,8 @@
 
 -module(game).
 -export([run/2,
-		run_match/3
+		run_match/3,
+		evil_genesys/2
 		]).
 
 
@@ -21,39 +22,35 @@
 % returns blacks_won, whites_won, or draw
 run(Blacks,Whites) ->
 	State = state:init_state(),
-	run(State,Blacks,no_evaluation,[],Whites,no_evaluation,[]).
+	run(State,Blacks,no_evaluation,Whites,no_evaluation).
 
-run({Turn,_,Board}=State,Blacks,B_eval,TrainingSetB,Whites,W_eval,TrainingSetW) ->
+run({Turn,_,Board}=State,Blacks,B_eval,Whites,W_eval) ->
 	Color = state:color(Turn),
-	state:print_board(Board),
 	case Color of
-		blacks -> {Move,B_eval1,TrainingCases} = Blacks:get_move(State,B_eval), W_eval1=W_eval;
-		whites -> {Move,W_eval1,TrainingCases} = Whites:get_move(State,W_eval), B_eval1=B_eval
+		blacks -> {Move,B_eval1} = Blacks:get_move(State,B_eval), W_eval1=W_eval;
+		whites -> {Move,W_eval1} = Whites:get_move(State,W_eval), B_eval1=B_eval
 	end,
 
 	case state:change_state(State,Move) of
 		{whites_won,_Fiver} -> 
-			Blacks:learn_dataset(TrainingSetB),
-			Whites:learn_dataset(TrainingSetW),
+			state:print_board(Board),
 			whites_won;
 			
 		{blacks_won,_Fiver} -> 
-			Blacks:learn_dataset(TrainingSetB),
-			Whites:learn_dataset(TrainingSetW),
+			state:print_board(Board),
 			blacks_won;
 
 		draw -> 
-			Blacks:learn_dataset(TrainingSetB),
-			Whites:learn_dataset(TrainingSetW),
+			state:print_board(Board),
 			draw;
 		NextState -> 
 			case Color of
 				blacks ->
 					io:format("(~p) Blacks' move: ~p~n",[Turn,state:convert(Move)]),
-					run(NextState,Blacks,B_eval1,TrainingCases++TrainingSetB,Whites,W_eval1,TrainingSetW);
+					run(NextState,Blacks,B_eval1,Whites,W_eval1);
 				whites ->
 					io:format("(~p) Whites' move: ~p~n",[Turn,state:convert(Move)]), 
-					run(NextState,Blacks,B_eval1,TrainingSetB,Whites,W_eval1,TrainingCases++TrainingSetW)
+					run(NextState,Blacks,B_eval1,Whites,W_eval1)
 			end
 	end.
 
@@ -71,5 +68,8 @@ run_match(Blacks,Whites,Game_number,B_won,Draw,W_won) ->
 	end.
 
 
+
+
+evil_genesys(Nbr_bot, Nbr_matches) -> ok.
 
 
