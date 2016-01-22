@@ -13,6 +13,7 @@
 		]). 
 
 -export([							% methods shared with smart_bot
+		init_w/0,
 		init_evaluation/1,
 		change_evaluation/3,
 		get_counters_after_move/3,
@@ -115,7 +116,7 @@ get_move({Turn,LastMove,_}=State,LastEval) ->
 	MyColor = state:color(Turn),
 	CurrEval = change_evaluation(LastEval,LastMove,OppColor),
 	BestMoves = get_best_moves(State,CurrEval),
-	io:format("Best moves: ~p~n",[BestMoves]),
+	%io:format("Best moves: ~p~n",[BestMoves]),
 
 	M = smart_bot:choose_move([ {M,P} || {M,_,P}<-BestMoves]),
 	NewEval = change_evaluation(CurrEval,M,MyColor),

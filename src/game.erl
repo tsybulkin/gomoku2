@@ -33,15 +33,15 @@ run({Turn,_,Board}=State,Blacks,B_eval,Whites,W_eval) ->
 	case state:change_state(State,Move) of
 		{whites_won,_Fiver} -> 
 			state:print_board(Board),
-			whites_won;
+			{whites_won,B_eval1,W_eval1};
 			
 		{blacks_won,_Fiver} -> 
 			state:print_board(Board),
-			blacks_won;
+			{blacks_won,B_eval1,W_eval1};
 
 		draw -> 
 			state:print_board(Board),
-			draw;
+			{draw,B_eval1,W_eval1};
 		NextState -> 
 			case Color of
 				blacks ->
@@ -61,9 +61,9 @@ run_match(Blacks,Whites,Game_number) -> run_match(Blacks,Whites,Game_number,0,0,
 run_match(_,_,0,B_won,Draw,W_won) -> {B_won,Draw,W_won};
 run_match(Blacks,Whites,Game_number,B_won,Draw,W_won) ->
 	case run(Blacks,Whites) of
-		blacks_won -> run_match(Blacks,Whites,Game_number-1,B_won+1,Draw,W_won);
-		whites_won -> run_match(Blacks,Whites,Game_number-1,B_won,Draw,W_won+1);
-		draw -> run_match(Blacks,Whites,Game_number-1,B_won,Draw+1,W_won)
+		{blacks_won,_,_} -> run_match(Blacks,Whites,Game_number-1,B_won+1,Draw,W_won);
+		{whites_won,_,_} -> run_match(Blacks,Whites,Game_number-1,B_won,Draw,W_won+1);
+		{draw,_,_} -> run_match(Blacks,Whites,Game_number-1,B_won,Draw+1,W_won)
 	end.
 
 
