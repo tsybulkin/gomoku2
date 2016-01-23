@@ -24,7 +24,7 @@
 -define(TERMINAL_VALUE,100).
 -define(THRESHOLD,0.75).
 
--define(MY_SINGL,0).
+-define(MY_SINGL,0.0).
 -define(OPP_SINGL,-0.5).
 -define(MY_DUPL,2).
 -define(OPP_DUPL,-4).

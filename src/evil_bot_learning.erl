@@ -13,6 +13,7 @@
 -export([run/4
 		]).
 
+-define(L_RATE,1.2).
 
 
 
@@ -72,8 +73,16 @@ run_matches(Nbr_matches,Coeffs,Stat_file,Feat1,Feat2) ->
 
 
 
-get_w2(Won,Lost,lost_lost) -> get_w2(Won,Lost,lost_draw);
-
+get_w2(Won,Lost,lost_lost) -> 
+	lists:foldl(fun(Feat,Acc) ->
+		V1 = dict:fetch(Feat,Won), V2 = dict:fetch(Feat,Lost),
+		io:format("V1=~p, V2=~p~n",[V1,V2]),
+		if V2==0 -> dict:store(Feat,0.0,Acc);
+			V1/V2 > 1 -> dict:store(Feat,V1*?L_RATE,Acc);
+			true -> dict:store(Feat,V1/?L_RATE,Acc)
+		end
+	end,dict:new(),dict:fetch_keys(Lost)
+	);
 get_w2(Won,Lost,lost_draw) -> 
 	lists:foldl(fun(Feat,Acc) ->
 		V1 = dict:fetch(Feat,Won), V2 = dict:fetch(Feat,Lost),
@@ -84,7 +93,12 @@ get_w2(Won,Lost,lost_draw) ->
 
 
 log_feature(Stat_file,Feat1,Feat2,W_old,W_new) ->
-	Old = float_to_list(dict:fetch(Feat1,W_old))++" "++float_to_list(dict:fetch(Feat2,W_old)),
-	New = float_to_list(dict:fetch(Feat1,W_new))++" "++float_to_list(dict:fetch(Feat2,W_new)),
+	Old = num2list(dict:fetch(Feat1,W_old))++" "++num2list(dict:fetch(Feat2,W_old)),
+	New = num2list(dict:fetch(Feat1,W_new))++" "++num2list(dict:fetch(Feat2,W_new)),
 	file:write_file(Stat_file,Old++" "++New++"\n",[append]).
+
+
+num2list(N) when is_integer(N) -> integer_to_list(N);
+num2list(N) when is_float(N) -> float_to_list(N).
+
 
